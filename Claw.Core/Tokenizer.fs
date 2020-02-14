@@ -24,7 +24,7 @@ type Token =
     | Unsigned
     | SizeOf
     | SquareBracketOpen
-    | SquarBracketClose
+    | SquareBracketClose
     | Percent
     | ParenOpen
     | ParenClose
@@ -60,7 +60,32 @@ type Token =
     | QuestionMark
     | Colon
     | VarArgs
-
+    | Underscore
+    | Dot
+    | Modulo
+    | Increment
+    | Decrement
+    | IncrementEq
+    | DecrementEq
+    | ShiftLeft
+    | ShiftRight
+    | XOr
+    | PlusEq
+    | MinusEq
+    | MulEq
+    | DivEq
+    | ModuloEq
+    | LogicalAnd
+    | LogicalOr
+    | LogicalNot
+    | Complement
+    | BitwiseAndEq
+    | BitwiseXOrEq
+    | ShiftLeftEq
+    | ShiftRightEq
+    | Arrow
+    | TernaryQuestionMark
+    | Signed
 
 let stringToken s tret: Parser<_> = pstring s >>. preturn tret
 
@@ -78,6 +103,37 @@ let liftPString s output: Parser<_> = pstring s >>. preturn output
 
 let str s = pstring s
 let phash = Hash |> liftPChar '#'
+let psemicolon = Semicolon |> liftPChar ';'
+let punsigned = Unsigned |> liftPString "unsigned"
+let psigned = Signed |> liftPString "signed"
+let psizeof = SizeOf |> liftPString "sizeof"
+let psquarebracketopen = SquareBracketOpen |> liftPChar '['
+let psquarebracketclose = SquareBracketClose |> liftPChar ']'
+let pcurlybraceopen = CurlyBraceOpen |> liftPChar '{'
+let pcurlybraceClose = CurlyBraceClose |> liftPChar '}'
+let pnewline = LineBreak |> liftPChar '\n'
+let pand = And |> liftPChar '&'
+let plogicand = LogicalAnd |> liftPString "&&"
+let por = Or |> liftPChar '|'
+let plogicor = LogicalOr |> liftPString "||"
+let pnot = Not |> liftPChar '~'
+let plogicnot = LogicalNot |> liftPChar '!'
+let pquestion = QuestionMark |> liftPChar '?'
+let pcolon = Colon |> liftPChar ':'
+let punderscore = Underscore |> liftPChar '_'
+let pdot = Dot |> liftPChar '.'
+let pincrement = Increment |> liftPString "++"
+let pdecrement = Decrement |> liftPString "--"
+let pincrementeq = IncrementEq |> liftPString "+="
+let pdecrementeq = DecrementEq |> liftPString "-="
+let pshiftleft = ShiftLeft |> liftPString "<<"
+let pshiftright = ShiftRight |> liftPString ">>"
+let pxor = XOr |> liftPChar '^'
+let pmuleq = MulEq |> liftPString "*="
+let pdiveq = DivEq |> liftPString "/="
+let pmoduloeq = ModuloEq |> liftPString "%="
+let parrow = Arrow |> liftPString "->"
+let ppercent = Percent |> liftPChar '%'
 let pcomma = Comma |> liftPChar ','
 let pplus = Plus |> liftPChar '+'
 let pminus = Minus |> liftPChar '-'
@@ -149,7 +205,8 @@ let tokenParser =
               pelse
               pendif
               pif
-              pinclude ])
+              pinclude
+              phash ])
 
 let executeTokenParser input =
     match run tokenParser input with
