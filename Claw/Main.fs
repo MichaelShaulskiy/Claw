@@ -2,12 +2,11 @@ module Claw.Main
 
 open Claw.Core.Tokenizer
 open Claw.Program
+open Claw.Core.Prelude
 
 [<EntryPoint>]
 let main argv = 
-    repl (fun () -> printfn "Claw REPL"
-                    System.Console.ReadLine()) |> ignore
-    executeTokenParser "#define MYVALUE a"
-    |> (function Some xs -> xs | None -> [])
+    repl (fun () -> System.Console.ReadLine()) |> ignore
+    stripWhiteSpace $ unpackMaybeParseResult (executeTokenParser "#define MYVALUE a  ")
     |> printfn "%A"
     0

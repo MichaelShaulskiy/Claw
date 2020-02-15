@@ -32,6 +32,7 @@ type Token =
     | Comma
     | Asterisk
     | Ampersand
+    | Assignment
     | CurlyBraceOpen
     | CurlyBraceClose
     | Plus
@@ -47,7 +48,6 @@ type Token =
     | IfDef
     | IfNDef
     | Elif
-    | Else
     | EndIf
     | If
     | Include
@@ -66,27 +66,92 @@ type Token =
     | Modulo
     | Increment
     | Decrement
-    | IncrementEq
-    | DecrementEq
+    | IncrementAsign
+    | DecrementAsign
     | ShiftLeft
+    | ShiftLeftAsign
     | ShiftRight
+    | ShiftRightAsign
     | XOr
-    | PlusEq
-    | MinusEq
-    | MulEq
-    | DivEq
-    | ModuloEq
+    | MulAsign
+    | DivAsign
+    | ModuloAsign
     | LogicalAnd
     | LogicalOr
     | LogicalNot
     | Complement
-    | BitwiseAndEq
-    | BitwiseXOrEq
-    | ShiftLeftEq
-    | ShiftRightEq
+    | BitwiseAndAsing
+    | BitwiseXOrAsign
+    | BitwiseORAsign
     | Arrow
     | TernaryQuestionMark
     | Signed
+    | ScopeOp
+    | SingleLineComment
+    | MultiLineCommentStart
+    | MultiLineCommentStop
+    | BatchShift
+    | AtSign
+    | BackTick
+    | Asm
+    | Auto
+    | Bool
+    | Break
+    | Case
+    | Catch
+    | Char
+    | Class
+    | Const
+    | ConstExpr
+    | Continue
+    | DeclType
+    | Default
+    | Delete
+    | Do
+    | Double
+    | Else
+    | Enum
+    | Explicit
+    | Export
+    | Extern
+    | BoolLiteral of bool
+    | Float
+    | FloatLiteral of double
+    | Goto
+    | IfStatement
+    | Inline
+    | Int
+    | Long
+    | Mutable
+    | Namespace
+    | New
+    | NoExcept
+    | NullPtr
+    | Private
+    | Protected
+    | Public
+    | Register
+    | Return
+    | Short
+    | Static
+    | Struct
+    | Switch
+    | Template
+    | This
+    | Throw
+    | Try
+    | TypeDef
+    | TypeId
+    | TypeName
+    | Union
+    | Using
+    | Virtual
+    | Void
+    | Volatile
+    | While
+    | StaticCast
+    | ConstCast
+    | ReinterpretCast
 
 let stringToken s tret: Parser<_> = pstring s >>. preturn tret
 
@@ -101,58 +166,83 @@ let (<!>) (p: Parser<_, _>) label: Parser<_, _> =
 let liftPChar symbol output: Parser<_> = pchar symbol >>. preturn output
 let liftPString s output: Parser<_> = pstring s >>. preturn output
 
-let parsers = [(Hash, "#"); (Semicolon, ";")]
 
+let genParser (tup: Token * string): Parser<_> =
+    match tup with
+    | (T, xs) when String.length xs > 1 -> pstring xs >>. preturn T
+    | (T, xs) -> pchar (char xs) >>. preturn T
 
-let str s = pstring s
-let phash = Hash |> liftPChar '#'
-let psemicolon = Semicolon |> liftPChar ';'
-let punsigned = Unsigned |> liftPString "unsigned"
-let psigned = Signed |> liftPString "signed"
-let psizeof = SizeOf |> liftPString "sizeof"
-let psquarebracketopen = SquareBracketOpen |> liftPChar '['
-let psquarebracketclose = SquareBracketClose |> liftPChar ']'
-let pcurlybraceopen = CurlyBraceOpen |> liftPChar '{'
-let pcurlybraceClose = CurlyBraceClose |> liftPChar '}'
-let pnewline = LineBreak |> liftPChar '\n'
-let pand = And |> liftPChar '&'
-let plogicand = LogicalAnd |> liftPString "&&"
-let por = Or |> liftPChar '|'
-let plogicor = LogicalOr |> liftPString "||"
-let pnot = Not |> liftPChar '~'
-let plogicnot = LogicalNot |> liftPChar '!'
-let pquestion = QuestionMark |> liftPChar '?'
-let pcolon = Colon |> liftPChar ':'
-let punderscore = Underscore |> liftPChar '_'
-let pdot = Dot |> liftPChar '.'
-let pincrement = Increment |> liftPString "++"
-let pdecrement = Decrement |> liftPString "--"
-let pincrementeq = IncrementEq |> liftPString "+="
-let pdecrementeq = DecrementEq |> liftPString "-="
-let pshiftleft = ShiftLeft |> liftPString "<<"
-let pshiftright = ShiftRight |> liftPString ">>"
-let pxor = XOr |> liftPChar '^'
-let pmuleq = MulEq |> liftPString "*="
-let pdiveq = DivEq |> liftPString "/="
-let pmoduloeq = ModuloEq |> liftPString "%="
-let parrow = Arrow |> liftPString "->"
-let ppercent = Percent |> liftPChar '%'
-let pcomma = Comma |> liftPChar ','
-let pplus = Plus |> liftPChar '+'
-let pminus = Minus |> liftPChar '-'
-let pdiv = Div |> liftPChar '/'
-let pmul = Mul |> liftPChar '*'
-let peq = Eq |> liftPString "=="
-let pneq = NEq |> liftPString "!="
-let pgreater = Greater |> liftPChar '>'
-let pless = Less |> liftPChar '<'
-let pgreatereq = GreaterEq |> liftPString ">="
-let plesseq = LessEq |> liftPString "<="
-let pparenopen = ParenOpen |> liftPChar '('
-let pparenclose = ParenClose |> liftPChar ')'
-let pspace = Space |> liftPChar ' '
-let pvarargs = VarArgs |> liftPString "..."
-let pdefine = Define |> liftPString "#define"
+let parsers =
+    [ 
+      (Hash, "#")
+      (AtSign, "@")
+      (Semicolon, ";")
+      (Define, "#define")
+      (Space, " ") 
+      (Unsigned, "unsigned")
+      (Signed, "signed")
+      (SizeOf, "sizeof")
+      (TypeOf, "typeof")
+      (SquareBracketOpen, "[")
+      (SquareBracketClose, "]")
+      (ModuloAsign, "%=")
+      (Percent, "%")
+      (ParenOpen, "(")
+      (ParenClose, ")")
+      (Comma, ",")
+      (Asterisk, "*")
+      (LogicalAnd, "&&")
+      (Ampersand, "&")
+      (CurlyBraceOpen, "{")
+      (CurlyBraceClose, "}")
+      (MultiLineCommentStart, @"/*")
+      (MultiLineCommentStop, @"*/")
+      (SingleLineComment, @"//")
+      (Increment, "++")
+      (Decrement, "--")
+      (Plus, "+")
+      (Arrow, "->")
+      (Minus, "-")
+      (Div, "/")
+      (Eq, "==")
+      (IncrementAsign, "+=")
+      (DecrementAsign, "-=")
+      (ShiftLeftAsign, "<<=")
+      (ShiftRightAsign, ">>=")
+      (BitwiseAndAsing, "&=")
+      (BitwiseXOrAsign, "^=")
+      (BitwiseORAsign, "|=")
+      (MulAsign, "*=")
+      (DivAsign, "/=")
+      (Assignment, "=")
+      (NEq, "!=")
+      (GreaterEq, ">=")
+      (LessEq, "<=")
+      (ShiftLeft, "<<")
+      (ShiftRight, ">>")
+      (Greater, ">")
+      (Less, "<")
+      (IfDef, "#ifdef")
+      (IfNDef, "#ifndef")
+      (Elif, "#elif")
+      (EndIf, "#endif")
+      (TError, "#error")
+      (Pragma, "#pragma")
+      (Include, "#include")
+      (Underscore, "_")
+      (LogicalNot, "!")
+      (LogicalOr, "||")
+      (Complement, "~")
+      (QuestionMark, "?")
+      (ScopeOp, "::")
+      (Colon, ":")
+      (VarArgs, "...")
+      (Dot, ".")
+      (BatchShift, "shift")
+      (BackTick, "``")
+      ]
+
+let generatedParsers = List.map genParser parsers
 
 let pidentifier: Parser<_> =
     let isIdentifierFirstChar c = isLetter c || c = '_'
@@ -172,84 +262,17 @@ let pstringliteral =
                           | c -> string c)
     between (pstring "\"") (pstring "\"") (manyStrings (normalCharSnippet <|> escapedChar)) |>> StringLiteral
 
-let pifdef = IfDef |> liftPString "#ifdef"
-let pifndef = IfNDef |> liftPString "#ifndef"
-let pelif = Elif |> liftPString "#elif"
-let pelse = Else |> liftPString "#else"
-let pendif = EndIf |> liftPString "#endif"
-let pif = If |> liftPString "#if"
-let pinclude = Include |> liftPString "#include"
 
-let tokenParser =
-    many
-        (choice
-            [ pcomma
-              psemicolon
-              punsigned
-              psigned
-              psizeof
-              psquarebracketopen
-              psquarebracketclose
-              pcurlybraceopen
-              pcurlybraceClose
-              pnewline
-              plogicand
-              plogicnot
-              plogicor
-              pnot
-              por
-              pxor
-              pquestion
-              pcolon
-              punderscore
-              pvarargs
-              pdot
-              pincrement
-              pincrementeq
-              pdecrement
-              pdecrementeq
-              pshiftleft
-              pshiftright
-              pmuleq
-              pdiveq
-              pmoduloeq
-              parrow
-              ppercent
-              pand
-              pplus
-              pminus
-              pdiv
-              pmul
-              peq
-              pneq
-              pgreatereq
-              plesseq
-              pgreater
-              pless
-              pparenopen
-              pparenclose
-              pspace
-              pdefine
-              pidentifier
-              pintliteral
-              pstringliteral
-              pifdef
-              pifndef
-              pelif
-              pelse
-              pendif
-              pif
-              pinclude
-              phash ])
-
+let tokenParser = many (choice (List.rev (List.append generatedParsers [pidentifier; pintliteral; pstringliteral])))
 let executeTokenParser input =
     match run tokenParser input with
     | Success(value, _, _) -> Some value
     | Failure(_) -> None
 
-let unpackMaybeParseResult (xs: list<Token> option) = match xs with
-                                                      | Some x -> x
-                                                      | _ -> [NOP]
+let unpackMaybeParseResult (xs: list<Token> option) =
+    match xs with
+    | Some x -> x
+    | _ -> [ NOP ]
 
 
 let stripWhiteSpace = List.filter (fun x -> x <> Space)
