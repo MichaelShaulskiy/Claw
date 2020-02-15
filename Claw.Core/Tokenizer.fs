@@ -23,6 +23,7 @@ type Token =
     | CharLiteral of char
     | Unsigned
     | SizeOf
+    | TypeOf
     | SquareBracketOpen
     | SquareBracketClose
     | Percent
@@ -99,6 +100,8 @@ let (<!>) (p: Parser<_, _>) label: Parser<_, _> =
 // constructs a lifted pchar parser
 let liftPChar symbol output: Parser<_> = pchar symbol >>. preturn output
 let liftPString s output: Parser<_> = pstring s >>. preturn output
+
+let parsers = [(Hash, "#"); (Semicolon, ";")]
 
 
 let str s = pstring s
@@ -181,6 +184,38 @@ let tokenParser =
     many
         (choice
             [ pcomma
+              psemicolon
+              punsigned
+              psigned
+              psizeof
+              psquarebracketopen
+              psquarebracketclose
+              pcurlybraceopen
+              pcurlybraceClose
+              pnewline
+              plogicand
+              plogicnot
+              plogicor
+              pnot
+              por
+              pxor
+              pquestion
+              pcolon
+              punderscore
+              pvarargs
+              pdot
+              pincrement
+              pincrementeq
+              pdecrement
+              pdecrementeq
+              pshiftleft
+              pshiftright
+              pmuleq
+              pdiveq
+              pmoduloeq
+              parrow
+              ppercent
+              pand
               pplus
               pminus
               pdiv
@@ -194,7 +229,6 @@ let tokenParser =
               pparenopen
               pparenclose
               pspace
-              pvarargs
               pdefine
               pidentifier
               pintliteral
@@ -212,5 +246,10 @@ let executeTokenParser input =
     match run tokenParser input with
     | Success(value, _, _) -> Some value
     | Failure(_) -> None
+
+let unpackMaybeParseResult (xs: list<Token> option) = match xs with
+                                                      | Some x -> x
+                                                      | _ -> [NOP]
+
 
 let stripWhiteSpace = List.filter (fun x -> x <> Space)

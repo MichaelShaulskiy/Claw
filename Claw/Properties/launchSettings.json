@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Claw": {
+      "commandName": "Project",
+      "commandLineArgs": "Hallo Welt"
+    }
+  }
+}

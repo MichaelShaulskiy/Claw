@@ -21,6 +21,7 @@ module Parsers =
         let input = ["#define"; "#ifndef"]
         let expected = [Some [Define]; Some [IfNDef]]
         let actual = input |> List.map executeTokenParser
+        Assert.Fail()
 
 module General = 
     open NUnit.Framework

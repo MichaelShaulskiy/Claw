@@ -32,8 +32,7 @@ let repl (getInput : unit -> string) =
     while not (input.ToUpper().Equals("EXIT")) do
         printf "> "
         input <- getInput()
-        printfn "%s" input
+        printfn "%A" (stripWhiteSpace (unpackMaybeParseResult (executeTokenParser input)))
         
-    //repl (fun () -> printfn "Claw REPL"
-    //                System.Console.ReadLine())
+
     0 // return an integer exit code
