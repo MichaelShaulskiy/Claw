@@ -1,9 +1,10 @@
 module Claw.Test.TokenizerTest
 
-module Parsers = 
+module Precedence = 
     open NUnit.Framework
     open NUnit.Framework.Constraints
     open Claw.Core.Tokenizer
+    open Claw.Program
 
     [<SetUp>]
     let Setup () = 
@@ -15,6 +16,11 @@ module Parsers =
         let expected = Some [Hash]
         let actual = executeTokenParser input
         Assert.That(actual, Is.EqualTo(expected))
+
+    [<Test>]
+    let ``hash preceeded by whitespace`` () =
+        let inputs = List.map indent [50..2] |> List.map (sprintf "%s#") |> List.rev
+        Assert.Fail(sprintf "%A" inputs)
 
     [<Test>]
     let ``phash distinguish from other hash beginnings`` () = 
