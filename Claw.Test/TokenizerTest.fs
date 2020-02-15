@@ -413,3 +413,9 @@ module Literals =
         let expected = [IntLiteral 0L, IntLiteral 1L, IntLiteral 2L, IntLiteral 3L, IntLiteral 4L, IntLiteral 5L, IntLiteral 6L, IntLiteral 7L, IntLiteral 8L, IntLiteral 9L]
         let actual = List.map parserGetResult inputs |> List.concat
         Assert.That(actual, Is.EqualTo(expected), "IntLiterals cannot be parsed.")
+
+    let ``Char Literal`` () = 
+        let input = @"'a'"
+        let expected = [CharLiteral 'a']
+        let actual = parserGetResult input
+        Assert.That(actual, Is.EqualTo(expected))

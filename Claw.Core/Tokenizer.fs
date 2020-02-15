@@ -252,6 +252,11 @@ let pidentifier: Parser<_> =
 
 let pintliteral: Parser<_> = pint64 |>> IntLiteral
 
+
+let pcharliteral: Parser<_> =
+    let mbetween popen pclose re: Parser<_> = between popen pclose re
+    mbetween (pstring "'") (pstring "'") anyChar |>> CharLiteral
+
 let pstringliteral =
     let normalCharSnippet = many1Satisfy (fun c -> c <> '\\' && c <> '"')
 
@@ -264,7 +269,7 @@ let pstringliteral =
     between (pstring "\"") (pstring "\"") (manyStrings (normalCharSnippet <|> escapedChar)) |>> StringLiteral
 
 
-let tokenParser = many (choice (List.rev (List.append generatedParsers [pidentifier; pintliteral; pstringliteral])))
+let tokenParser = many (choice (List.rev (List.append generatedParsers [pidentifier; pintliteral; pstringliteral; pcharliteral])))
 let executeTokenParser input =
     match run tokenParser input with
     | Success(value, _, _) -> Some value
