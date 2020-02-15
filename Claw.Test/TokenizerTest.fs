@@ -152,6 +152,23 @@ module Precedence =
         Assert.That(actual, Is.EqualTo(expected), "BackTick could not be parsed.")
 
     [<Test>]
+    let ``All Three Char correctly Parsed`` () =
+        let input = "<<="
+        let expected = [ShiftLeftAsign]
+        let actual = parserGetResultWithWhitespace input
+        Assert.That(actual, Is.EqualTo(expected), "ShiftLeftAsign could not be parsed.")
+
+        let input = ">>="
+        let expected = [ShiftRightAsign]
+        let actual = parserGetResultWithWhitespace input
+        Assert.That(actual, Is.EqualTo(expected), "ShiftRightAsign could not be parsed.")
+
+        let input = "..."
+        let expected = [VarArgs]
+        let actual = parserGetResultWithWhitespace input
+        Assert.That(actual, Is.EqualTo(expected), "VarArgs could not be parsed.")
+
+    [<Test>]
     let ``Colon or Scope`` () =
         let input = ":"
         let expected = [Colon]
@@ -414,8 +431,78 @@ module Literals =
         let actual = List.map parserGetResult inputs |> List.concat
         Assert.That(actual, Is.EqualTo(expected), "IntLiterals cannot be parsed.")
 
+    [<Test>]
     let ``Char Literal`` () = 
         let input = @"'a'"
         let expected = [CharLiteral 'a']
         let actual = parserGetResult input
         Assert.That(actual, Is.EqualTo(expected))
+
+module FundamentalTypes = 
+    open NUnit.Framework
+    open NUnit.Framework.Constraints
+    open Claw.Core.Tokenizer
+    open Claw.Program
+    open Claw.Core.Prelude
+
+    let parserGetResult = executeTokenParser >> unpackMaybeParseResult >> stripWhiteSpace
+
+    let parserGetResultWithWhitespace = executeTokenParser >> unpackMaybeParseResult
+
+    [<Test>]
+    let ``Void Type`` () = 
+        let input = "void"
+        let expected = [Void]
+        let actual = parserGetResult input
+        Assert.That(actual, Is.EqualTo(expected), "void not recognized.")
+
+        let input = "(void)"
+        let expected = [ParenOpen; Void; ParenClose]
+        let actual = parserGetResult input
+        Assert.That(actual, Is.EqualTo(expected), "void cast.")
+
+    [<Test>]
+    let ``bool type`` () =
+        Assert.Fail()
+
+
+    [<Test>]
+    let ``Fundamental Pointer Type`` () = 
+        Assert.Fail()
+
+module SourceCode = 
+    open NUnit.Framework
+    open NUnit.Framework.Constraints
+    open Claw.Core.Tokenizer
+    open Claw.Program
+    open Claw.Core.Prelude
+
+    let parserGetResult = executeTokenParser >> unpackMaybeParseResult >> stripWhiteSpace
+
+    let parserGetResultWithWhitespace = executeTokenParser >> unpackMaybeParseResult
+
+    [<Test>]
+    let ``Variable Declaration without Assignment`` () = 
+        Assert.Fail()
+
+    [<Test>]
+    let ``Function Declaration Without Definition`` () =
+        Assert.Fail()
+
+    [<Test>]
+    let ``Typedef`` () = 
+        Assert.Fail()
+
+    [<Test>]
+    let ``Type Alias using Using Keyword`` () =
+        Assert.Fail()
+
+    [<Test>]
+    let ``sizeof expression`` () =
+        Assert.Fail()
+
+    [<Test>]
+    let ``const Keyword`` () = 
+        Assert.Fail()
+    
+        
