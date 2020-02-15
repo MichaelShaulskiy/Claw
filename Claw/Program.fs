@@ -31,8 +31,11 @@ let exampleTokenList = [Define; Space; Identifier "MyFunc"; ParenOpen;
 let repl (getInput : unit -> string) = 
     let mutable input = getInput()
     while not (input.ToUpper().Equals("EXIT")) do
-        printf "Claw REPL :> "
-        input <- getInput()
+        printf ":> "
+        input <- System.Console.ReadLine()
+
+
+
         printfn "%A" (stripWhiteSpace (unpackMaybeParseResult (executeTokenParser input)))
         
 

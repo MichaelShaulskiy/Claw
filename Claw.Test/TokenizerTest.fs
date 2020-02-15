@@ -34,122 +34,122 @@ module Precedence =
         let input = "%="
         let expected = [ModuloAsign]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "ModuloAssign could not be parsed.")
 
         let input = "=="
         let expected = [Eq]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "Eq could not be parsed.")
 
         let input = "&&"
         let expected = [LogicalAnd]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "LogicAnd could not be parsed.")
 
         let input = @"//"
         let expected = [SingleLineComment]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "SingleLineComment could not be parsed.")
 
         let input = @"/*"
         let expected = [MultiLineCommentStart]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "MultiLineCommentStart could not be parsed.")
 
         let input = @"*/"
         let expected = [MultiLineCommentStop]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "MultiLineCommentStop could not be parsed.")
 
         let input = "++"
         let expected = [Increment]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "Increment could not be parsed.")
 
         let input = "--"
         let expected = [Decrement]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "Decrement could not be parsed.")
 
         let input = "->"
         let expected = [Arrow]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "Arrow could not be parsed.")
 
         let input = "+="
         let expected = [IncrementAsign]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "IncrementAsign could not be parsed.")
 
         let input = "-="
         let expected = [DecrementAsign]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "DecrementAsign could not be parsed.")
 
         let input = "&="
         let expected = [BitwiseAndAsing]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "BitwiseAndAsing could not be parsed.")
 
         let input = "^="
         let expected = [BitwiseXOrAsign]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "BitwiseXOrAsign could not be parsed.")
 
         let input = "|="
         let expected = [BitwiseORAsign]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "BitwiseORAsign could not be parsed.")
 
         let input = "*="
         let expected = [MulAsign]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "MulAsign could not be parsed.")
 
         let input = "/="
         let expected = [DivAsign]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "DivAsign could not be parsed.")
 
         let input = "!="
         let expected = [NEq]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "NEq could not be parsed.")
 
         let input = "<="
         let expected = [LessEq]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "LessEq could not be parsed.")
 
         let input = ">="
         let expected = [GreaterEq]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "GreaterEq could not be parsed.")
 
         let input = "<<"
         let expected = [ShiftLeft]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "ShiftLeft could not be parsed.")
 
         let input = ">>"
         let expected = [ShiftRight]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "ShiftRight could not be parsed.")
 
         let input = "::"
         let expected = [ScopeOp]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "ScopeOp could not be parsed.")
 
         let input = "||"
         let expected = [LogicalOr]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "LogicalOr could not be parsed.")
 
         let input = "``"
         let expected = [BackTick]
         let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Hash could not be parsed.")
+        Assert.That(actual, Is.EqualTo(expected), "BackTick could not be parsed.")
 
     [<Test>]
     let ``Colon or Scope`` () =
@@ -395,3 +395,21 @@ module General =
         let actual = executeTokenParser input
 
         Assert.That(actual, Is.EqualTo(expected))
+
+module Literals = 
+    open NUnit.Framework
+    open NUnit.Framework.Constraints
+    open Claw.Core.Tokenizer
+    open Claw.Program
+    open Claw.Core.Prelude
+    
+    let parserGetResult = executeTokenParser >> unpackMaybeParseResult >> stripWhiteSpace
+
+    let parserGetResultWithWhitespace = executeTokenParser >> unpackMaybeParseResult
+
+    [<Test>]
+    let ``One Digit Positive Int Literal`` () =
+        let inputs = List.map string [0..9]
+        let expected = [IntLiteral 0L, IntLiteral 1L, IntLiteral 2L, IntLiteral 3L, IntLiteral 4L, IntLiteral 5L, IntLiteral 6L, IntLiteral 7L, IntLiteral 8L, IntLiteral 9L]
+        let actual = List.map parserGetResult inputs |> List.concat
+        Assert.That(actual, Is.EqualTo(expected), "IntLiterals cannot be parsed.")

@@ -8,5 +8,4 @@ open Claw.Core.Prelude
 let main argv = 
     repl (fun () -> System.Console.ReadLine()) |> ignore
     stripWhiteSpace $ unpackMaybeParseResult (executeTokenParser "#define MYVALUE a  ")
-    |> printfn "%A"
     0
