@@ -7,7 +7,7 @@
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="Tokenizer.fs" />
-    <Compiel Include="Syntax.fs" />
+    <Compile Include="Syntax.fs" />
   </ItemGroup>
 
   <ItemGroup>

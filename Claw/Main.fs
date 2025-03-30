@@ -7,5 +7,5 @@ open Claw.Core.Prelude
 [<EntryPoint>]
 let main argv = 
     repl (fun () -> System.Console.ReadLine()) |> ignore
-    stripWhiteSpace $ unpackMaybeParseResult (executeTokenParser "#define MYVALUE a  ")
+    stripWhiteSpace $ unpackMaybeParseResult (executeTokenParser "#define MYVALUE a  ") |> ignore
     0
