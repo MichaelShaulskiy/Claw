@@ -321,7 +321,7 @@ module Precedence =
         let input = ["#define"; "#ifndef"]
         let expected = [Some [Define]; Some [IfNDef]]
         let actual = input |> List.map executeTokenParser
-        Assert.Fail()
+        Assert.That(actual, Is.EqualTo(expected))
 
 module General = 
     open NUnit.Framework
@@ -427,7 +427,9 @@ module Literals =
     [<Test>]
     let ``One Digit Positive Int Literal`` () =
         let inputs = List.map string [0..9]
-        let expected = [IntLiteral 0L, IntLiteral 1L, IntLiteral 2L, IntLiteral 3L, IntLiteral 4L, IntLiteral 5L, IntLiteral 6L, IntLiteral 7L, IntLiteral 8L, IntLiteral 9L]
+        let inputs2 = [for i in 0..9 -> string i]
+        //let expected = [IntLiteral 0L, IntLiteral 1L, IntLiteral 2L, IntLiteral 3L, IntLiteral 4L, IntLiteral 5L, IntLiteral 6L, IntLiteral 7L, IntLiteral 8L, IntLiteral 9L]
+        let expected= List.map IntLiteral [0..9]
         let actual = List.map parserGetResult inputs |> List.concat
         Assert.That(actual, Is.EqualTo(expected), "IntLiterals cannot be parsed.")
 
@@ -438,9 +440,22 @@ module Literals =
         let actual = parserGetResult input
         Assert.That(actual, Is.EqualTo(expected))
 
+    [<Test>]
+    let ``VarArgs Literal`` () =
+        let input = "..."
+        let expected = [VarArgs]
+        let actual = parserGetResult input
+        Assert.That(actual, Is.EqualTo(expected))
+
+    [<Test>]
+    let ``Bool Literals`` () =
+        let inputs = ["true"; "false"]
+        let expected = [BoolLiteral true; BoolLiteral false]
+        let actual = List.map parserGetResult inputs |> List.concat
+        Assert.That(actual, Is.EqualTo(expected), "BoolLiterals cannot be parsed.")
+
 module FundamentalTypes = 
     open NUnit.Framework
-    open NUnit.Framework.Constraints
     open Claw.Core.Tokenizer
     open Claw.Program
     open Claw.Core.Prelude

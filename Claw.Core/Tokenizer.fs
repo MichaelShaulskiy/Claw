@@ -208,8 +208,8 @@ let parsers =
       (Eq, "==")
       (IncrementAsign, "+=")
       (DecrementAsign, "-=")
-      (ShiftLeftAsign, "<<=")
-      (ShiftRightAsign, ">>=")
+      
+      
       (BitwiseAndAsing, "&=")
       (BitwiseXOrAsign, "^=")
       (BitwiseORAsign, "|=")
@@ -219,7 +219,9 @@ let parsers =
       (Greater, ">")
       (Less, "<")
       (ShiftLeft, "<<")
+      (ShiftLeftAsign, "<<=")
       (ShiftRight, ">>")
+      (ShiftRightAsign, ">>=")
       (GreaterEq, ">=")
       (LessEq, "<=")
       (IfDef, "#ifdef")
