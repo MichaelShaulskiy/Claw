@@ -1,523 +1,683 @@
 module Claw.Test.TokenizerTest
 
-module Precedence = 
-    open NUnit.Framework
-    open NUnit.Framework.Constraints
-    open Claw.Core.Tokenizer
-    open Claw.Program
-    open Claw.Core.Prelude
+open NUnit.Framework
+open NUnit.Framework.Constraints
+open Claw.Core.Tokenizer
+open Claw.Program
+open Claw.Core.Prelude
+
+// Helper functions for testing
+let parserGetResult = tokenize >> List.filter (fun x -> x <> EOF)
+let parserGetResultWithWhitespace = tokenize
+
+[<SetUp>]
+let Setup () = 
+    ()
+
+// ===== PREPROCESSOR DIRECTIVES TESTS =====
+module DirectiveTests =
     
-    let parserGetResult = executeTokenParser >> unpackMaybeParseResult >> stripWhiteSpace
-
-    let parserGetResultWithWhitespace = executeTokenParser >> unpackMaybeParseResult
-
-    [<SetUp>]
-    let Setup () = 
-        ()
-
     [<Test>]
-    let ``phash Simple Case`` () = 
-        let input = "#"
-        let expected = Some [Hash]
-        let actual = executeTokenParser input
-        Assert.That(actual, Is.EqualTo(expected))
-
-    [<Test>]
-    let ``hash preceeded by whitespace`` () =
-        let expected = [Hash]
-        List.map (fun x -> new string(' ', x) ^ "#") [1..50]
-        |> List.map (executeTokenParser >> unpackMaybeParseResult >> stripWhiteSpace)
-        |> List.iter (fun x -> Assert.That(x, Is.EqualTo(expected), "hash is not recognized when preceeded by whitespace."))
-
-    [<Test>]
-    let ``All Two Char correctly Parsed`` () =
-        let input = "%="
-        let expected = [ModuloAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "ModuloAssign could not be parsed.")
-
-        let input = "=="
-        let expected = [Eq]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Eq could not be parsed.")
-
-        let input = "&&"
-        let expected = [LogicalAnd]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "LogicAnd could not be parsed.")
-
-        let input = @"//"
-        let expected = [SingleLineComment]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "SingleLineComment could not be parsed.")
-
-        let input = @"/*"
-        let expected = [MultiLineCommentStart]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "MultiLineCommentStart could not be parsed.")
-
-        let input = @"*/"
-        let expected = [MultiLineCommentStop]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "MultiLineCommentStop could not be parsed.")
-
-        let input = "++"
-        let expected = [Increment]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Increment could not be parsed.")
-
-        let input = "--"
-        let expected = [Decrement]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Decrement could not be parsed.")
-
-        let input = "->"
-        let expected = [Arrow]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "Arrow could not be parsed.")
-
-        let input = "+="
-        let expected = [IncrementAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "IncrementAsign could not be parsed.")
-
-        let input = "-="
-        let expected = [DecrementAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "DecrementAsign could not be parsed.")
-
-        let input = "&="
-        let expected = [BitwiseAndAsing]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "BitwiseAndAsing could not be parsed.")
-
-        let input = "^="
-        let expected = [BitwiseXOrAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "BitwiseXOrAsign could not be parsed.")
-
-        let input = "|="
-        let expected = [BitwiseORAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "BitwiseORAsign could not be parsed.")
-
-        let input = "*="
-        let expected = [MulAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "MulAsign could not be parsed.")
-
-        let input = "/="
-        let expected = [DivAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "DivAsign could not be parsed.")
-
-        let input = "!="
-        let expected = [NEq]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "NEq could not be parsed.")
-
-        let input = "<="
-        let expected = [LessEq]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "LessEq could not be parsed.")
-
-        let input = ">="
-        let expected = [GreaterEq]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "GreaterEq could not be parsed.")
-
-        let input = "<<"
-        let expected = [ShiftLeft]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "ShiftLeft could not be parsed.")
-
-        let input = ">>"
-        let expected = [ShiftRight]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "ShiftRight could not be parsed.")
-
-        let input = "::"
-        let expected = [ScopeOp]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "ScopeOp could not be parsed.")
-
-        let input = "||"
-        let expected = [LogicalOr]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "LogicalOr could not be parsed.")
-
-        let input = "``"
-        let expected = [BackTick]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "BackTick could not be parsed.")
-
-    [<Test>]
-    let ``All Three Char correctly Parsed`` () =
-        let input = "<<="
-        let expected = [ShiftLeftAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "ShiftLeftAsign could not be parsed.")
-
-        let input = ">>="
-        let expected = [ShiftRightAsign]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "ShiftRightAsign could not be parsed.")
-
-        let input = "..."
-        let expected = [VarArgs]
-        let actual = parserGetResultWithWhitespace input
-        Assert.That(actual, Is.EqualTo(expected), "VarArgs could not be parsed.")
-
-    [<Test>]
-    let ``Colon or Scope`` () =
-        let input = ":"
-        let expected = [Colon]
+    let ``#define without identifier or value`` () = 
+        let input = "#define"
+        let expected = [Directive Define]
         let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Colon not recognized.")
-
-        let input = "::"
-        let expected = [ScopeOp]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "ScopeOp not recognized.")
-
-        let input = ": :"
-        let expected = [Colon; Colon]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Colon followed by Colon.")
-
-        let input = ": ::"
-        let expected = [Colon; ScopeOp]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Colon followed by ScopeOp.")
-
-        let input = ":: :"
-        let expected = [ScopeOp; Colon]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "ScopeOp followed by Colon")
-
-    [<Test>]
-    let ``Ampersand or LAnd`` () =
-        let input = "&"
-        let expected = [Ampersand]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Ampersand not recognized.")
-
-        let input = "&&"
-        let expected = [LogicalAnd]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "LogicalAnd not recognized.")
-
-        let input = "& &"
-        let expected = [Ampersand; Ampersand]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Ampersand followed by Ampersand")
-
-
-    [<Test>]
-    let ``Dot Or VarArgs`` () =
-        let input = @"."
-        let expected = [Dot]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Parser cannot detect a single dot.")
-
-        let input = @".."
-        let expected = [Dot; Dot]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Parser cannot distinguish two dots.")
-
-        let input = @". ."
-        let expected = [Dot; Dot]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Parser cannot distinguish two dots.")
-
-        let input = @"..."
-        let expected = [VarArgs]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Parser cannot distinguish three dots from VarArgs.")
-
-        let input = @"... ."
-        let expected = [VarArgs; Dot]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "VarArgs followed by Dot.")
-
-        let input = @"... .."
-        let expected = [VarArgs; Dot; Dot]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "VarArgs followed by 2 Dots.")
-
-        let input = @"... .. ."
-        let expected = [VarArgs; Dot; Dot; Dot]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "VarArgs followed by 3 Dots.")
-
-
-    [<Test>]
-    let ``distinguish comments or div`` () = 
-        let input = @"/"
-        let expected = [Div]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Parser cannot distinguish single Slash.")
-
-        let input = @"//"
-        let expected = [SingleLineComment]
-        let actual = parserGetResult input
-        Assert.AreEqual(expected, actual, "Parser cannot distinguish SingleLineComment")
-
-        let input = @"/*"
-        let expected = [MultiLineCommentStart]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Parser cannot detect the beginning of a multiline comment.")
-
-        let input = @"*/"
-        let expected = [MultiLineCommentStop]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Parser cannot detect the end of a multiline comment.")
-
-    [<Test>]
-    let ``tricky comments or div`` () = 
-        let input = @"2 / //"
-        let expected = [IntLiteral 2L; Div; SingleLineComment]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Div followed by single line comment.")
-
-        let input = @"2/ //"
-        let expected = [IntLiteral 2L; Div; SingleLineComment]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Div followed by single line comment.")
-
-        let input = @"2 ///"
-        let expected = [IntLiteral 2L; SingleLineComment]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Div followed by single line docstring.")
-
-        let input = @"2 / /*"
-        let expected = [IntLiteral 2L; Div; MultiLineCommentStart]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Div followed by MultilineCommentStart.")
-
-        let input = @"2 / */"
-        let expected = [IntLiteral 2L; Div; MultiLineCommentStop]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Div followed by MultilineCommentStop.")
-
-        let input = @"2 / /**/"
-        let expected = [IntLiteral 2L; Div; MultiLineCommentStart; MultiLineCommentStop]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Div followed by enclosed MultiLineComment on single line.")
-
-        let input = @"2 / /* * */"
-        let expected = [IntLiteral 2L; Div; MultiLineCommentStart; Asterisk; MultiLineCommentStop]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Div followed by Multilinecomment encasing a single asterisk")
-
-        let input = @"2 / /* // */"
-        let expected = [IntLiteral 2L; Div; MultiLineCommentStart; SingleLineComment; MultiLineCommentStop]
-        let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "Div followed by MultilineComment encasing single line comment.")
-
-
-    [<Test>]
-    let ``phash distinguish from other hash beginnings`` () = 
-        let input = ["#define"; "#ifndef"]
-        let expected = [Some [Define]; Some [IfNDef]]
-        let actual = input |> List.map executeTokenParser
-        Assert.That(actual, Is.EqualTo(expected))
-
-module General = 
-    open NUnit.Framework
-    open NUnit.Framework.Constraints
-    open Claw.Core.Tokenizer
-
-    [<SetUp>]
-    let Setup () =
-        ()
-
-    [<Test>]
-    let ``Tokenize #define MYVALUE`` () =
-        let input = "#define MYVALUE"
-        let expected = Some [Define; Space; Identifier "MYVALUE"]
-        let actual = executeTokenParser input
-        Assert.That(actual, Is.EqualTo(expected))
-
-    [<Test>]
-    let ``Tokenize #define MYVALUE with one trailing space`` () =
-        let input = "#define MYVALUE "
-        let expected = Some [Define; Space; Identifier "MYVALUE"; Space]
-        let actual = executeTokenParser input
-        Assert.That(actual, Is.EqualTo(expected))
-
-    [<Test>]
-    let ``Tokenize #define MYVALUE with multiple trailing spaces`` () =
-        let input = "#define MYVALUE  "
-        let expected = Some [Define; Space; Identifier "MYVALUE"; Space; Space;]
-        let actual = executeTokenParser input
-        Assert.That(actual, Is.EqualTo(expected))
-
-
-    [<Test>]
-    let ``Tokenize #define _MYVALUE`` () = 
-        let input = "#define _MYVALUE"
-        let expected = Some [Define; Space; Identifier "_MYVALUE"]
-        let actual = executeTokenParser input
-
-        Assert.That(actual, Is.EqualTo(expected))
-
-    [<Test>]
-    let ``Tokenize #define _MY_VALUE`` () = 
-        let input = "#define _MY_VALUE"
-        let expected = Some [Define; Space; Identifier "_MY_VALUE"]
-        let actual = executeTokenParser input
-
-        Assert.That(actual, Is.EqualTo(expected))
-
-
-    [<Test>]
-    let ``Tokenize #define _MY_VALUE_`` () = 
-        let input = "#define _MY_VALUE_"
-        let expected = Some [Define; Space; Identifier "_MY_VALUE_"]
-        let actual = executeTokenParser input
-
-        Assert.That(actual, Is.EqualTo(expected))
-
-    [<Test>]
-    let ``Tokenize #define MYMACRO(a)`` () = 
-        let input = "#define MYMACRO(a)"
-        let expected = Some [Define; Space; Identifier "MYMACRO"; ParenOpen; Identifier "a"; ParenClose]
-        let actual = executeTokenParser input
-
-        Assert.That(actual, Is.EqualTo(expected))
-
-    [<Test>]
-    let ``Tokenize #define MYMACRO(a,b)`` () = 
-        let input = "#define MYMACRO(a,b)"
-        let expected = Some [Define; Space; Identifier "MYMACRO"; ParenOpen; Identifier "a"; Comma; Identifier "b"; ParenClose]
-        let actual = executeTokenParser input
-
-        Assert.That(actual, Is.EqualTo(expected))
-
-    [<Test>]
-    let ``Tokenize #define MYMACRO(a, b)`` () = 
-        let input = "#define MYMACRO(a, b)"
-        let expected = Some [Define; Space; Identifier "MYMACRO"; ParenOpen; Identifier "a"; 
-                             Comma; Space; Identifier "b"; ParenClose]
-        let actual = executeTokenParser input
-
-        Assert.That(actual, Is.EqualTo(expected))
-
-    [<Test>]
-    let ``Tokenize #define MYMACRO(a, b) with one trailing space`` () = 
-        let input = "#define MYMACRO(a, b) "
-        let expected = Some [Define; Space; Identifier "MYMACRO"; ParenOpen; Identifier "a"; 
-                             Comma; Space; Identifier "b"; ParenClose; Space]
-        let actual = executeTokenParser input
-
-        Assert.That(actual, Is.EqualTo(expected))
-
-module Literals = 
-    open NUnit.Framework
-    open NUnit.Framework.Constraints
-    open Claw.Core.Tokenizer
-    open Claw.Program
-    open Claw.Core.Prelude
+        CollectionAssert.AreEqual(expected, actual)
     
-    let parserGetResult = executeTokenParser >> unpackMaybeParseResult >> stripWhiteSpace
-
-    let parserGetResultWithWhitespace = executeTokenParser >> unpackMaybeParseResult
+    [<Test>]
+    let ``#define with valid identifiers but no value`` () = 
+        let input = "#define a"
+        let expected = [Directive Define; Whitespace " "; Identifier "a"]
+        let actual = parserGetResultWithWhitespace input |> List.filter (fun x -> x <> EOF)
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``One Digit Positive Int Literal`` () =
-        let inputs = List.map string [0..9]
-        let inputs2 = [for i in 0..9 -> string i]
-        //let expected = [IntLiteral 0L, IntLiteral 1L, IntLiteral 2L, IntLiteral 3L, IntLiteral 4L, IntLiteral 5L, IntLiteral 6L, IntLiteral 7L, IntLiteral 8L, IntLiteral 9L]
-        let expected= List.map IntLiteral [0..9]
-        let actual = List.map parserGetResult inputs |> List.concat
-        Assert.That(actual, Is.EqualTo(expected), "IntLiterals cannot be parsed.")
-
-    [<Test>]
-    let ``Char Literal`` () = 
-        let input = @"'a'"
-        let expected = [CharLiteral 'a']
+    let ``#undef directive`` () =
+        let input = "#undef MACRO_NAME"
+        let expected = [Directive Undef; Identifier "MACRO_NAME"]
         let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected))
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``VarArgs Literal`` () =
-        let input = "..."
-        let expected = [VarArgs]
+    let ``#include directive`` () =
+        let input = "#include"
+        let expected = [Directive Include]
         let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected))
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``Bool Literals`` () =
-        let inputs = ["true"; "false"]
-        let expected = [BoolLiteral true; BoolLiteral false]
-        let actual = List.map parserGetResult inputs |> List.concat
-        Assert.That(actual, Is.EqualTo(expected), "BoolLiterals cannot be parsed.")
-
-module FundamentalTypes = 
-    open NUnit.Framework
-    open Claw.Core.Tokenizer
-    open Claw.Program
-    open Claw.Core.Prelude
-
-    let parserGetResult = executeTokenParser >> unpackMaybeParseResult >> stripWhiteSpace
-
-    let parserGetResultWithWhitespace = executeTokenParser >> unpackMaybeParseResult
-
-    [<Test>]
-    let ``Void Type`` () = 
-        let input = "void"
-        let expected = [Void]
+    let ``#ifdef directive`` () =
+        let input = "#ifdef DEBUG"
+        let expected = [Directive IfDef; Identifier "DEBUG"]
         let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "void not recognized.")
+        CollectionAssert.AreEqual(expected, actual)
 
-        let input = "(void)"
-        let expected = [ParenOpen; Void; ParenClose]
+    [<Test>]
+    let ``#ifndef directive`` () =
+        let input = "#ifndef HEADER_H"
+        let expected = [Directive IfNDef; Identifier "HEADER_H"]
         let actual = parserGetResult input
-        Assert.That(actual, Is.EqualTo(expected), "void cast.")
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``bool type`` () =
-        Assert.Fail()
-
-
-    [<Test>]
-    let ``Fundamental Pointer Type`` () = 
-        Assert.Fail()
-
-module SourceCode = 
-    open NUnit.Framework
-    open NUnit.Framework.Constraints
-    open Claw.Core.Tokenizer
-    open Claw.Program
-    open Claw.Core.Prelude
-
-    let parserGetResult = executeTokenParser >> unpackMaybeParseResult >> stripWhiteSpace
-
-    let parserGetResultWithWhitespace = executeTokenParser >> unpackMaybeParseResult
+    let ``#if directive`` () =
+        let input = "#if"
+        let expected = [Directive IfDirective]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``Variable Declaration without Assignment`` () = 
-        Assert.Fail()
+    let ``#else directive`` () =
+        let input = "#else"
+        let expected = [Directive ElseDirective]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``Function Declaration Without Definition`` () =
-        Assert.Fail()
+    let ``#elif directive`` () =
+        let input = "#elif"
+        let expected = [Directive Elif]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``Typedef`` () = 
-        Assert.Fail()
+    let ``#endif directive`` () =
+        let input = "#endif"
+        let expected = [Directive EndIf]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``Type Alias using Using Keyword`` () =
-        Assert.Fail()
+    let ``#error directive`` () =
+        let input = "#error"
+        let expected = [Directive Error]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``sizeof expression`` () =
-        Assert.Fail()
+    let ``#pragma directive`` () =
+        let input = "#pragma"
+        let expected = [Directive Pragma]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
 
     [<Test>]
-    let ``const Keyword`` () = 
-        Assert.Fail()
-    
-        
+    let ``#line directive`` () =
+        let input = "#line"
+        let expected = [Directive Line]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``#warning directive`` () =
+        let input = "#warning"
+        let expected = [Directive Warning]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Mixin directive Begin @/*`` () =
+        let input = "@/*"
+        let expected = [Directive MixinBegin]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Mixin directive End */@`` () =
+        let input = "*/@"
+        let expected = [Directive MixinEnd]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+// ===== PREPROCESSOR OPERATORS TESTS =====
+module PreprocessorOperatorTests =
+
+    [<Test>]
+    let ``defined operator`` () =
+        let input = "defined"
+        let expected = [PreprocessorOperator Defined]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``__has_include operator`` () =
+        let input = "__has_include"
+        let expected = [PreprocessorOperator HasInclude]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``__has_attribute operator`` () =
+        let input = "__has_attribute"
+        let expected = [PreprocessorOperator HasAttribute]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+// ===== KEYWORDS TESTS =====
+module KeywordTests =
+
+    [<Test>]
+    let ``Storage class specifiers`` () =
+        let testCases = [
+            ("auto", Auto)
+            ("register", Register) 
+            ("static", Static)
+            ("extern", Extern)
+            ("_Thread_local", ThreadLocal)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Keyword expected], actual)
+
+    [<Test>]
+    let ``Type specifiers`` () =
+        let testCases = [
+            ("void", Void)
+            ("char", Char)
+            ("short", Short)
+            ("int", Int)
+            ("long", Long)
+            ("float", Float)
+            ("double", Double)
+            ("signed", Signed)
+            ("unsigned", Unsigned)
+            ("_Bool", Bool)
+            ("_Complex", Complex)
+            ("_Imaginary", Imaginary)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Keyword expected], actual)
+
+    [<Test>]
+    let ``Type qualifiers`` () =
+        let testCases = [
+            ("const", Const)
+            ("restrict", Restrict)
+            ("volatile", Volatile)
+            ("_Atomic", Atomic)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Keyword expected], actual)
+
+    [<Test>]
+    let ``Function specifiers`` () =
+        let testCases = [
+            ("inline", Inline)
+            ("_Noreturn", NoReturn)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Keyword expected], actual)
+
+    [<Test>]
+    let ``Control flow keywords`` () =
+        let testCases = [
+            ("if", If)
+            ("else", Else)
+            ("switch", Switch)
+            ("case", Case)
+            ("default", Default)
+            ("while", While)
+            ("for", For)
+            ("do", Do)
+            ("break", Break)
+            ("continue", Continue)
+            ("goto", Goto)
+            ("return", Return)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Keyword expected], actual)
+
+    [<Test>]
+    let ``Other keywords`` () =
+        let testCases = [
+            ("struct", Struct)
+            ("union", Union)
+            ("enum", Enum)
+            ("typedef", Typedef)
+            ("_Static_assert", StaticAssert)
+            ("_Alignas", AlignAs)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Keyword expected], actual)
+
+// ===== IDENTIFIERS TESTS =====
+module IdentifierTests =
+
+    [<Test>]
+    let ``Simple identifier`` () =
+        let input = "variable"
+        let expected = [Identifier "variable"]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Identifier with underscore`` () =
+        let input = "_private_var"
+        let expected = [Identifier "_private_var"]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Identifier with numbers`` () =
+        let input = "var123"
+        let expected = [Identifier "var123"]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Multiple identifiers`` () =
+        let input = "var1 var2"
+        let expected = [Identifier "var1"; Identifier "var2"]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+// ===== LITERAL TESTS =====
+module LiteralTests =
+
+    [<Test>]
+    let ``Integer literals decimal`` () =
+        let input = "123"
+        let expected = [Literal (IntegerLiteral (123L, None))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Integer literals with suffix`` () =
+        let testCases = [
+            ("123u", 123L, Some "u")
+            ("123L", 123L, Some "L") 
+            ("123UL", 123L, Some "UL")
+            ("123ll", 123L, Some "ll")
+        ]
+        for (input, expectedValue, expectedSuffix) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Literal (IntegerLiteral (expectedValue, expectedSuffix))], actual)
+
+    [<Test>]
+    let ``Hexadecimal integer literals`` () =
+        let input = "0xFF"
+        let expected = [Literal (IntegerLiteral (255L, None))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Octal integer literals`` () =
+        let input = "0755"
+        let expected = [Literal (IntegerLiteral (493L, None))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Floating point literals`` () =
+        let input = "3.14"
+        let expected = [Literal (FloatingLiteral (3.14, None))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Floating point with suffix`` () =
+        let input = "3.14f"
+        let expected = [Literal (FloatingLiteral (3.14, Some "f"))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Character literals`` () =
+        let input = "'a'"
+        let expected = [Literal (CharacterLiteral ('a', None))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Character literals with prefix`` () =
+        let input = "L'a'"
+        let expected = [Literal (CharacterLiteral ('a', Some "L"))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Escaped character literals`` () =
+        let testCases = [
+            ("'\\n'", '\n')
+            ("'\\t'", '\t')
+            ("'\\r'", '\r')
+            ("'\\\\'", '\\')
+            ("'\\''", '\'')
+        ]
+        for (input, expectedChar) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Literal (CharacterLiteral (expectedChar, None))], actual)
+
+    [<Test>]
+    let ``String literals`` () =
+        let input = "\"hello\""
+        let expected = [Literal (StringLiteral ("hello", None))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``String literals with prefix`` () =
+        let testCases = [
+            ("L\"hello\"", "hello", Some "L")
+            ("u\"hello\"", "hello", Some "u")
+            ("U\"hello\"", "hello", Some "U")
+            ("u8\"hello\"", "hello", Some "u8")
+        ]
+        for (input, expectedStr, expectedPrefix) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Literal (StringLiteral (expectedStr, expectedPrefix))], actual)
+
+    [<Test>]
+    let ``String literals with escape sequences`` () =
+        let input = "\"hello\\nworld\""
+        let expected = [Literal (StringLiteral ("hello\nworld", None))]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+// ===== OPERATOR TESTS =====
+module OperatorTests =
+
+    [<Test>]
+    let ``Arithmetic operators`` () =
+        let testCases = [
+            ("+", Plus)
+            ("-", Minus)
+            ("*", Multiply)
+            ("/", Divide)
+            ("%", Modulo)
+            ("++", Increment)
+            ("--", Decrement)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Operator expected], actual)
+
+    [<Test>]
+    let ``Assignment operators`` () =
+        let testCases = [
+            ("=", Assign)
+            ("+=", PlusAssign)
+            ("-=", MinusAssign)
+            ("*=", MultiplyAssign)
+            ("/=", DivideAssign)
+            ("%=", ModuloAssign)
+            ("<<=", LeftShiftAssign)
+            (">>=", RightShiftAssign)
+            ("&=", BitwiseAndAssign)
+            ("|=", BitwiseOrAssign)
+            ("^=", BitwiseXorAssign)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Operator expected], actual)
+
+    [<Test>]
+    let ``Comparison operators`` () =
+        let testCases = [
+            ("==", Equal)
+            ("!=", NotEqual)
+            ("<", Less)
+            (">", Greater)
+            ("<=", LessEqual)
+            (">=", GreaterEqual)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Operator expected], actual)
+
+    [<Test>]
+    let ``Logical operators`` () =
+        let testCases = [
+            ("&&", LogicalAnd)
+            ("||", LogicalOr)
+            ("!", LogicalNot)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Operator expected], actual)
+
+    [<Test>]
+    let ``Bitwise operators`` () =
+        let testCases = [
+            ("&", BitwiseAnd)
+            ("|", BitwiseOr)
+            ("^", BitwiseXor)
+            ("~", BitwiseNot)
+            ("<<", LeftShift)
+            (">>", RightShift)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Operator expected], actual)
+
+    [<Test>]
+    let ``Other operators`` () =
+        let testCases = [
+            ("?", Conditional)
+            ("->", Arrow)
+            (".", Dot)
+            ("::", ScopeResolution)
+            ("sizeof", SizeOf)
+            ("_Alignof", AlignOf)
+            ("typeof", TypeOf)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Operator expected], actual)
+
+// ===== PUNCTUATOR TESTS =====
+module PunctuatorTests =
+
+    [<Test>]
+    let ``Basic punctuators`` () =
+        let testCases = [
+            ("(", LeftParen)
+            (")", RightParen)
+            ("[", LeftBracket)
+            ("]", RightBracket)
+            ("{", LeftBrace)
+            ("}", RightBrace)
+            (";", Semicolon)
+            (",", Comma)
+            (":", Colon)
+            ("#", Hash)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Punctuator expected], actual)
+
+    [<Test>]
+    let ``Multi-character punctuators`` () =
+        let testCases = [
+            ("...", Ellipsis)
+            ("##", DoubleHash)
+        ]
+        for (input, expected) in testCases do
+            let actual = parserGetResult input
+            CollectionAssert.AreEqual([Punctuator expected], actual)
+
+// ===== HEADER NAME TESTS =====
+module HeaderNameTests =
+
+    [<Test>]
+    let ``System header`` () =
+        let input = "<stdio.h>"
+        let expected = [HeaderName ("stdio.h", true)]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Local header`` () =
+        let input = "\"myheader.h\""
+        let expected = [HeaderName ("myheader.h", false)]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+// ===== COMMENT TESTS =====
+module CommentTests =
+
+    [<Test>]
+    let ``Single line comment`` () =
+        let input = "// This is a comment"
+        let expected = [Comment "// This is a comment"]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Multi line comment`` () =
+        let input = "/* This is a comment */"
+        let expected = [Comment "/*This is a comment */"]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+// ===== WHITESPACE AND NEWLINE TESTS =====
+module WhitespaceTests =
+
+    [<Test>]
+    let ``Whitespace preserved`` () =
+        let input = "   "
+        let actual = parserGetResultWithWhitespace input |> List.filter (fun x -> x <> EOF)
+        let expected = [Whitespace "   "]
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Newline`` () =
+        let input = "\n"
+        let actual = parserGetResultWithWhitespace input |> List.filter (fun x -> x <> EOF)
+        let expected = [Newline]
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Tab whitespace`` () =
+        let input = "\t\t"
+        let actual = parserGetResultWithWhitespace input |> List.filter (fun x -> x <> EOF)
+        let expected = [Whitespace "\t\t"]
+        CollectionAssert.AreEqual(expected, actual)
+
+// ===== COMPLEX INTEGRATION TESTS =====
+module IntegrationTests =
+
+    [<Test>]
+    let ``Complete function declaration`` () =
+        let input = "int main(void) {"
+        let expected = [
+            Keyword Int
+            Identifier "main"
+            Punctuator LeftParen
+            Keyword Void
+            Punctuator RightParen
+            Punctuator LeftBrace
+        ]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Preprocessor with macro`` () =
+        let input = "#define MAX 100"
+        let expected = [
+            Directive Define
+            Identifier "MAX"
+            Literal (IntegerLiteral (100L, None))
+        ]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Variable assignment`` () =
+        let input = "x = 42;"
+        let expected = [
+            Identifier "x"
+            Operator Assign
+            Literal (IntegerLiteral (42L, None))
+            Punctuator Semicolon
+        ]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Array access`` () =
+        let input = "arr[0]"
+        let expected = [
+            Identifier "arr"
+            Punctuator LeftBracket
+            Literal (IntegerLiteral (0L, None))
+            Punctuator RightBracket
+        ]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Function call`` () =
+        let input = "printf(\"Hello\");"
+        let expected = [
+            Identifier "printf"
+            Punctuator LeftParen
+            Literal (StringLiteral ("Hello", None))
+            Punctuator RightParen
+            Punctuator Semicolon
+        ]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Complex expression`` () =
+        let input = "a + b * c"
+        let expected = [
+            Identifier "a"
+            Operator Plus
+            Identifier "b"
+            Operator Multiply
+            Identifier "c"
+        ]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+// ===== EDGE CASES AND ERROR HANDLING =====
+module EdgeCaseTests =
+
+    [<Test>]
+    let ``Empty input`` () =
+        let input = ""
+        let expected = []
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Only whitespace`` () =
+        let input = "   \t  "
+        let expected = []
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Mixed tokens with whitespace`` () =
+        let input = "int x = 5;"
+        let expectedWithoutWhitespace = [
+            Keyword Int
+            Identifier "x"
+            Operator Assign
+            Literal (IntegerLiteral (5L, None))
+            Punctuator Semicolon
+        ]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expectedWithoutWhitespace, actual)
+
+    [<Test>]
+    let ``Very long identifier`` () =
+        let longId = String.replicate 100 "a"
+        let input = longId
+        let expected = [Identifier longId]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)
+
+    [<Test>]
+    let ``Unicode in comments`` () =
+        let input = "// Hello 世界"
+        let expected = [Comment "// Hello 世界"]
+        let actual = parserGetResult input
+        CollectionAssert.AreEqual(expected, actual)

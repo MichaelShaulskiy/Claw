@@ -22,21 +22,16 @@ let rec indent level = match level with
 let printIndented (xs: string list) = 
     let dat = [0..(xs.Length)] |> zip xs |> List.map (fun (value, level) -> sprintf "%s%s" (indent (level * 2)) value)
     List.iter (printfn "%A") dat
-    
-let exampleTokenList = [Define; Space; Identifier "MyFunc"; ParenOpen;
-                        Identifier "arg1"; Comma; Space; Identifier "arg2";
-                        ParenClose; Space; Identifier "arg1"; Space; Plus; Space; Identifier "arg2"]
 
 
 let repl (getInput : unit -> string) = 
-    let mutable input = getInput()
+    let mutable input = ""
     while not (input.ToUpper().Equals("EXIT")) do
         printf ":> "
-        input <- System.Console.ReadLine()
+        input <- getInput()
 
-
-
-        printfn "%A" (stripWhiteSpace (unpackMaybeParseResult (executeTokenParser input)))
+        //printfn "%A" (stripWhiteSpace (unpackMaybeParseResult (executeTokenParser input)))
+        printfn "%A" (input |> tokenize |> stripWhiteSpace)
         
 
     0 // return an integer exit code
