@@ -5,13 +5,13 @@
     <PublishAot>true</PublishAot>
     <RuntimeIdentifier>osx-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="Prelude.fs" />
     <Compile Include="Tokenizer.fs" />
     <Compile Include="Syntax.fs" />
-    <Compile Include="Parser.fs" />
   </ItemGroup>
 
   <ItemGroup>

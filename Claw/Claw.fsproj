@@ -6,6 +6,7 @@
     <PublishAot>true</PublishAot>
     <RuntimeIdentifier>osx-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="ReadLine" Version="2.0.1" />
     <PackageReference Include="Suave" Version="2.6.2" />
   </ItemGroup>
 
