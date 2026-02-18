@@ -3,7 +3,16 @@ module Claw.Core.Tokenizer
 open System
 open FParsec
 
-type ParserState = unit
+type IndentationState = {
+    IndentStack: int list
+    CurrentIndent: int
+}
+
+type ParserState = {
+    Indentation: IndentationState
+}
+
+// type ParserState = unit
 type Parser<'T> = Parser<'T, ParserState>
 
 type PreprocessorDirective =
@@ -51,31 +60,38 @@ type Operator =
     | BitwiseAnd | BitwiseOr | BitwiseXor | BitwiseNot | LeftShift | RightShift
     
     | Conditional | Arrow | Dot | SizeOf | AlignOf | TypeOf
-    | ScopeResolution
+    | ScopeResolution | TypeSignatureOp
 
 type Punctuator =
     | LeftParen | RightParen
     | LeftBracket | RightBracket
     | LeftBrace | RightBrace
     | Semicolon | Comma | Colon | Ellipsis
-    | Question | Hash | DoubleHash
+    | Question | Hash | DoubleHash | SingleArrowRight
+    | SingleArrowLeft
+    | Underscore | Dollar | Backtick
+    | Dot| Star | DoubleColon | Pipe
 
 type Keyword =
-    | Auto | Register | Static | Extern | ThreadLocal
 
-    | Void | Char | Short | Int | Long | Float | Double | Signed | Unsigned
-    | Bool | Complex | Imaginary
+    | Void | Int | Long | Float | Double
+    | Bool | Char
     
     | Const | Restrict | Volatile | Atomic
 
     | Inline | NoReturn
     | AlignAs
     
-    | If | Else | Switch | Case | Default
+    | Match | With | In | Else | Switch | Case | Default
     | While | For | Do | Break | Continue | Goto | Return
     
     | Struct | Union | Enum | Typedef
     | StaticAssert
+    | Namespace | Module | Let | Where 
+    | Open
+    | Try | Catch | Finally
+    | Mut | Rec
+
 
 type Token =
     | Directive of PreprocessorDirective
@@ -90,7 +106,76 @@ type Token =
     | Comment of string
     | HeaderName of string * bool    // filename * is_system_header
     | MacroParameter of string
+    | Indent
+    | Dedent
     | EOF
+
+let getIndentLevel (state: IndentationState) = state.CurrentIndent
+
+let pushIndent level (state: IndentationState) =
+    { state with IndentStack = level :: state.IndentStack; CurrentIndent = level }
+
+let popIndent (state: IndentationState) = match state.IndentStack with
+                                          | [] -> state
+                                          | _::xs -> { state with IndentStack = xs; CurrentIndent = List.tryHead xs |> Option.defaultValue 0}
+
+let initialIndentState = {
+    IndentStack = [0]
+    CurrentIndent = 0
+}
+
+let initParserState = {
+    Indentation = initialIndentState
+}
+
+let pindentation: Parser<int> = 
+    many (pchar ' ' <|> pchar '\t')
+    |>> (fun chars ->
+        chars |> List.fold (fun acc c ->
+            match c with
+            | ' ' -> acc + 1
+            | '\t' -> acc + 4
+
+            | _ -> acc) 0)
+
+let plinewithIndent plineContent: Parser<int * 'a> =
+    parse {
+        let! indent = pindentation
+        let! content = plineContent
+        return (indent, content)
+    }
+
+let processIndentation (oldLevel: int) (newLevel: int) : Token list =
+    if newLevel > oldLevel then
+        [Indent]
+    elif newLevel < oldLevel then
+        // Mehrere DEDENTs möglich
+        let dedentCount = (oldLevel - newLevel) / 4  // oder deine Tab-Größe
+        List.replicate dedentCount Dedent
+    else
+        []
+
+
+
+// Alternative: Stateful Parser mit getUserState/setUserState
+let pindentationStateful: Parser<Token list> =
+    parse {
+        let! state = getUserState
+        let! newIndent = pindentation
+        let oldIndent = state.Indentation.CurrentIndent
+        
+        let indentTokens = processIndentation oldIndent newIndent
+        
+        if newIndent > oldIndent then
+            do! updateUserState (fun s -> { s with Indentation = pushIndent newIndent s.Indentation })
+            return indentTokens
+        elif newIndent < oldIndent then
+            do! updateUserState (fun s -> { s with Indentation = popIndent s.Indentation })
+            return indentTokens
+        else
+            return indentTokens
+    }
+
 
 let ws = spaces
 let ws1 = spaces1
@@ -101,53 +186,19 @@ let pidentifier: Parser<Token> =
     many1Satisfy2L isIdentifierFirstChar isIdentifierChar "identifier"
     |>> (fun id -> 
         match id with
-        | "auto" -> Keyword Auto
-        | "register" -> Keyword Register
-        | "static" -> Keyword Static
-        | "extern" -> Keyword Extern
-        | "_Thread_local" -> Keyword ThreadLocal
+        | "namespace" -> Keyword Namespace
+        | "module" -> Keyword Module
+        | "open" -> Keyword Open
+        | "let" -> Keyword Let
+        | "where" -> Keyword Where
         | "void" -> Keyword Void
         | "char" -> Keyword Char
-        | "short" -> Keyword Short
         | "int" -> Keyword Int
         | "long" -> Keyword Long
         | "float" -> Keyword Float
         | "double" -> Keyword Double
-        | "signed" -> Keyword Signed
-        | "unsigned" -> Keyword Unsigned
-        | "_Bool" -> Keyword Bool
-        | "_Complex" -> Keyword Complex
-        | "_Imaginary" -> Keyword Imaginary
-        | "const" -> Keyword Const
-        | "restrict" -> Keyword Restrict
-        | "volatile" -> Keyword Volatile
-        | "_Atomic" -> Keyword Atomic
-        | "inline" -> Keyword Inline
-        | "_Noreturn" -> Keyword NoReturn
-        | "_Alignas" -> Keyword AlignAs
-        | "if" -> Keyword If
-        | "else" -> Keyword Else
-        | "switch" -> Keyword Switch
-        | "case" -> Keyword Case
-        | "default" -> Keyword Default
-        | "while" -> Keyword While
-        | "for" -> Keyword For
-        | "do" -> Keyword Do
-        | "break" -> Keyword Break
-        | "continue" -> Keyword Continue
-        | "goto" -> Keyword Goto
-        | "return" -> Keyword Return
-        | "struct" -> Keyword Struct
-        | "union" -> Keyword Union
-        | "enum" -> Keyword Enum
-        | "typedef" -> Keyword Typedef
-        | "_Static_assert" -> Keyword StaticAssert
-        | "sizeof" -> Operator SizeOf
-        | "_Alignof" -> Operator AlignOf
-        | "typeof" -> Operator TypeOf
-        | "defined" -> PreprocessorOperator Defined
-        | "__has_include" -> PreprocessorOperator HasInclude
-        | "__has_attribute" -> PreprocessorOperator HasAttribute
+        | "bool" -> Keyword Bool
+        | "mut" -> Keyword Mut
         | _ -> Identifier id)
 
 let pintegerLiteral: Parser<Token> =
@@ -233,6 +284,13 @@ let pheaderName: Parser<Token> =
     (systemHeader |>> (fun h -> HeaderName (h, true))) <|>
     (localHeader |>> (fun h -> HeaderName (h, false)))
 
+let ppath: Parser<Token> = 
+    let ppathliteral = many1Satisfy (fun c -> c <> '"' && c <> '\\')
+
+    (ppathliteral .>>. pchar '.') |>> (fun (a, b) -> Identifier $"{a}{b}")
+    <|>
+    (ppathliteral |>> (fun p -> Identifier p))
+
 let poperators: Parser<Token> =
     choice [
         pstring "<<=" >>% Operator LeftShiftAssign
@@ -255,8 +313,6 @@ let poperators: Parser<Token> =
         pstring "||" >>% Operator LogicalOr
         pstring "<<" >>% Operator LeftShift
         pstring ">>" >>% Operator RightShift
-        pstring "->" >>% Operator Arrow
-        pstring "::" >>% Operator ScopeResolution
         pstring "..." >>% Punctuator Ellipsis
         pstring "##" >>% Punctuator DoubleHash
         
@@ -274,11 +330,14 @@ let poperators: Parser<Token> =
         pchar '^' >>% Operator BitwiseXor
         pchar '~' >>% Operator BitwiseNot
         pchar '?' >>% Operator Conditional
-        pchar '.' >>% Operator Dot
+        pchar '.' >>% Punctuator Dot
     ]
 
 let ppunctuators: Parser<Token> =
     choice [
+        pstring "->" >>% Punctuator SingleArrowRight
+        pstring "<-" >>% Punctuator SingleArrowLeft
+        pstring "::" >>% Punctuator DoubleColon
         pchar '(' >>% Punctuator LeftParen
         pchar ')' >>% Punctuator RightParen
         pchar '[' >>% Punctuator LeftBracket
@@ -289,6 +348,9 @@ let ppunctuators: Parser<Token> =
         pchar ',' >>% Punctuator Comma
         pchar ':' >>% Punctuator Colon
         pchar '#' >>% Punctuator Hash
+        pchar '*' >>% Punctuator Star
+        pchar '`' >>% Punctuator Backtick
+        pchar '_' >>% Punctuator Underscore
     ]
 
 let pmixinDirective: Parser<Token> = ws >>. choice [
@@ -333,36 +395,22 @@ let pnewline: Parser<Token> =
 let ptoken: Parser<Token> =
     choice [
         pcomment
+        pnewline
+        pwhitespace
         ppreprocessorDirective
-        pfloatingLiteral
-        pintegerLiteral
-        pcharacterLiteral
-        pstringLiteral
-        pheaderName
         pidentifier
         poperators
         ppunctuators
-        pwhitespace
-        pnewline
+        pintegerLiteral
+        pfloatingLiteral
     ]
 
 let tokenize input: Token list =
-    match run (many ptoken .>> eof) input with
+    match runParserOnString (many ptoken .>> eof) initParserState "" input with
     | Success (tokens, _, _) -> tokens @ [EOF]
     | Failure (errorMsg, _, _) -> 
-        // Fallback: try to parse character by character
-        let rec parseChars acc remaining =
-            if String.length remaining = 0 then
-                List.rev (EOF :: acc)
-            else
-                match run ptoken remaining with
-                | Success (token, _, pos) when pos.Index > 0L ->
-                    let newRemaining = remaining.Substring(int pos.Index)
-                    parseChars (token :: acc) newRemaining
-                | _ ->
-                    // Skip problematic character
-                    parseChars acc (remaining.Substring(1))
-        parseChars [] input
+        // Fallback
+        [EOF]
 
 let tokenizeFile filePath =
     System.IO.File.ReadAllText(filePath) |> tokenize
@@ -400,6 +448,8 @@ let tokenToString = function
     | Comment c -> sprintf "COMMENT(%s)" c
     | HeaderName (name, isSystem) -> sprintf "HEADER(%s,%b)" name isSystem
     | MacroParameter p -> sprintf "MACRO_PARAM(%s)" p
+    | Indent -> "INDENT"
+    | Dedent -> "DEDENT"
     | EOF -> "EOF"
 
 let printTokens tokens =
@@ -408,3 +458,35 @@ let printTokens tokens =
 let stripWhiteSpace = List.filter (function 
     | Whitespace _ -> false 
     | _ -> true)
+
+let tokenizeWithIndentation (input: string): Token list =
+    let lines = input.Split([|'\n'|])
+    let mutable currentIndent = 0
+    let mutable tokens = []
+    
+    // Parser für restliche Zeile (einfache Version)
+    let plineTokens = many (choice [pcomment; pwhitespace; pidentifier; poperators; ppunctuators])
+    
+    for line in lines do
+        if String.IsNullOrWhiteSpace(line) then
+            tokens <- tokens @ [Newline]
+        else
+            match runParserOnString pindentation initParserState "" line with
+            | Success (indent, _, _) ->
+                let indentTokens = processIndentation currentIndent indent
+                tokens <- tokens @ indentTokens
+                currentIndent <- indent
+                
+                let restOfLine = line.TrimStart()
+                match runParserOnString plineTokens initParserState "" restOfLine with
+                | Success (lineTokens, _, _) ->
+                    tokens <- tokens @ lineTokens @ [Newline]
+                | Failure _ ->
+                    tokens <- tokens @ [Newline]
+            | Failure _ ->
+                tokens <- tokens @ [Newline]
+    
+    // Dedents am Ende für alle offenen Indentation-Levels
+    let finalDedents = List.replicate (currentIndent / 4) Dedent
+    tokens @ finalDedents @ [EOF]
+
