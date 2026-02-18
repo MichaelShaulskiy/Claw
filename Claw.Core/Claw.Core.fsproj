@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <Compile Include="Prelude.fs" />
+    <Compile Include="Types.fs" />
     <Compile Include="Tokenizer.fs" />
     <Compile Include="Syntax.fs" />
   </ItemGroup>

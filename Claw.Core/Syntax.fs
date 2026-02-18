@@ -1,7 +1,7 @@
 (* Transforms a list of token into an AST *)
 module Claw.Core.Syntax
 
-open Claw.Core.Tokenizer
+open Claw.Core.TokenizerTypes
 
 let withOption x f = match x with 
                      | Some xs -> f xs
