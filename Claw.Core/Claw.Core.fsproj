@@ -10,9 +10,12 @@
 
   <ItemGroup>
     <Compile Include="Prelude.fs" />
-    <Compile Include="Types.fs" />
     <Compile Include="Tokenizer.fs" />
     <Compile Include="Syntax.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="Tokenizer/Tokenizer.fsproj" />
   </ItemGroup>
 
   <ItemGroup>

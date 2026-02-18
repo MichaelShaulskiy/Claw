@@ -25,13 +25,13 @@ module Tokenizer =
 
     let pindentation: Parser<int> = 
         many (pchar ' ' <|> pchar '\t')
-        |>> (fun chars ->
+        |>> fun chars ->
             chars |> List.fold (fun acc c ->
                 match c with
                 | ' ' -> acc + 1
                 | '\t' -> acc + 4
 
-                | _ -> acc) 0)
+                | _ -> acc) 0
 
     let plinewithIndent plineContent: Parser<int * 'a> =
         parse {
@@ -79,7 +79,7 @@ module Tokenizer =
         let isIdentifierFirstChar c = isLetter c || c = '_'
         let isIdentifierChar c = isLetter c || isDigit c || c = '_'
         many1Satisfy2L isIdentifierFirstChar isIdentifierChar "identifier"
-        |>> (fun id -> 
+        |>> fun id -> 
             match id with
             | "namespace" -> Keyword Namespace
             | "module" -> Keyword Module
@@ -94,7 +94,7 @@ module Tokenizer =
             | "double" -> Keyword Double
             | "bool" -> Keyword Bool
             | "mut" -> Keyword Mut
-            | _ -> Identifier id)
+            | _ -> Identifier id
 
     let pintegerLiteral: Parser<Token> =
         let suffix = 
@@ -135,7 +135,7 @@ module Tokenizer =
             wholeStr + "." + fracStr + expStr
         
         decimalNumber .>>. opt suffix
-        |>> (fun (numStr, suf) -> Literal (FloatingLiteral (Double.Parse(numStr), suf)))
+        |>> fun (numStr, suf) -> Literal (FloatingLiteral (Double.Parse(numStr), suf))
 
     let pcharacterLiteral: Parser<Token> =
         let prefix = choice [pchar 'L'; pchar 'u'; pchar 'U'] |>> string
@@ -153,7 +153,7 @@ module Tokenizer =
         let regularChar = satisfy (fun c -> c <> '\'' && c <> '\\')
         
         opt prefix .>>. between (pchar '\'') (pchar '\'') (escapedChar <|> regularChar)
-        |>> (fun (pre, c) -> Literal (CharacterLiteral (c, pre)))
+        |>> fun (pre, c) -> Literal (CharacterLiteral (c, pre))
 
     let pstringLiteral: Parser<Token> =
         let prefix = choice [pstring "u8"; pchar 'u' |>> string; pchar 'U' |>> string; pchar 'L' |>> string]
@@ -171,7 +171,7 @@ module Tokenizer =
         let regularChars = many1Satisfy (fun c -> c <> '"' && c <> '\\')
         
         opt prefix .>>. between (pchar '"') (pchar '"') (manyStrings (regularChars <|> escapedChar))
-        |>> (fun (pre, s) -> Literal (StringLiteral (s, pre)))
+        |>> fun (pre, s) -> Literal (StringLiteral (s, pre))
 
     let pheaderName: Parser<Token> =
         let systemHeader = between (pchar '<') (pchar '>') (many1Satisfy (fun c -> c <> '>'))
@@ -188,6 +188,31 @@ module Tokenizer =
         (ppathliteral |>> (fun p -> Identifier p))
 
     let poperators: Parser<Token> =
+        let stringOps = [
+            ("<<=", Operator LeftShiftAssign)
+            (">>=", Operator RightShiftAssign)
+            ("++",Operator Increment)
+            ("--",Operator Decrement)
+            ("+=",Operator PlusAssign)
+            ("-=",Operator MinusAssign)
+            ("*=",Operator MultiplyAssign)
+            ("/=",Operator DivideAssign)
+            ("%=",Operator ModuloAssign)
+            ("&=",Operator BitwiseAndAssign)
+            ("|=",Operator BitwiseOrAssign)
+            ("^=",Operator BitwiseXorAssign)
+            ("==",Operator Equal)
+            ("!=",Operator NotEqual)
+            ("<=",Operator LessEqual)
+            (">=",Operator GreaterEqual)
+            ("&&",Operator LogicalAnd)
+            ("||",Operator LogicalOr)
+            ("<<",Operator LeftShift)
+            (">>",Operator RightShift)
+            ("...", Punctuator Ellipsis)
+            ("##",Punctuator DoubleHash)
+
+        ]
         choice [
             pstring "<<=" >>% Operator LeftShiftAssign
             pstring ">>=" >>% Operator RightShiftAssign
