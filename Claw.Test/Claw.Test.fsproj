@@ -16,7 +16,18 @@
   <ItemGroup>
     <Compile Include="Core\PreludeTest.fs" />
     <Compile Include="SyntaxExt.fs" />
-    <Compile Include="TokenizerTest.fs" />
+    <Compile Include="DirectiveTests.fs" />
+    <Compile Include="PreprocessorOperatorTests.fs" />
+    <Compile Include="KeywordTests.fs" />
+    <Compile Include="IdentifierTests.fs" />
+    <Compile Include="LiteralTests.fs" />
+    <Compile Include="OperatorTests.fs" />
+    <Compile Include="PunctuatorTests.fs" />
+    <Compile Include="HeaderNameTests.fs" />
+    <Compile Include="CommentTests.fs" />
+    <Compile Include="WhitespaceTests.fs" />
+    <Compile Include="IntegrationTests.fs" />
+    <Compile Include="EdgeCaseTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
