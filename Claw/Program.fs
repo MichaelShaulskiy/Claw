@@ -31,7 +31,8 @@ let repl (getInput : unit -> string) =
         input <- getInput()
 
         //printfn "%A" (stripWhiteSpace (unpackMaybeParseResult (executeTokenParser input)))
-        printfn "%A" (input |> tokenize |> stripWhiteSpace)
-        
+        //printfn "%A" (input |> tokenizeWithIndentation )
+        tokenizeFile "/Users/michaelshaulskiy/Coding/Claw/test.claw"
+        |> printfn "%A"
 
     0 // return an integer exit code

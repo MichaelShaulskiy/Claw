@@ -6,7 +6,6 @@ open Claw.Core.Prelude
 
 [<EntryPoint>]
 let main argv = 
-    printfn "Demonstrating 'where' binding in F#..."
     
     // Original REPL functionality
     printfn "\nStarting REPL (type EXIT to quit)..."

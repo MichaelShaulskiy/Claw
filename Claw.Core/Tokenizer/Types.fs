@@ -108,4 +108,11 @@ module TokenizerTypes =
         | Indent
         | Dedent
         | EOF
+    
+    type TokenInfo = {
+        Token: Token
+        Line: int
+        Character: int
+        IndentLevel: int
+    }
 

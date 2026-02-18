@@ -333,8 +333,7 @@ module Tokenizer =
             // Fallback
             [EOF]
 
-    let tokenizeFile filePath =
-        System.IO.File.ReadAllText(filePath) |> tokenize
+
 
     let filterWhitespace tokens =
         tokens |> List.filter (function 
@@ -380,34 +379,50 @@ module Tokenizer =
         | Whitespace _ -> false 
         | _ -> true)
 
-    let tokenizeWithIndentation (input: string): Token list =
+    let tokenizeWithIndentation (input: string): TokenInfo list =
         let lines = input.Split([|'\n'|])
         let mutable currentIndent = 0
         let mutable tokens = []
+        let mutable currentLine = 0
         
-        // Parser für restliche Zeile (einfache Version)
-        let plineTokens = many (choice [pcomment; pwhitespace; pidentifier; poperators; ppunctuators])
+        let plineTokens = many (choice [pcomment; pwhitespace; pidentifier; poperators; ppunctuators; pintegerLiteral; pfloatingLiteral])
         
         for line in lines do
             if String.IsNullOrWhiteSpace(line) then
-                tokens <- tokens @ [Newline]
+                tokens <- tokens @ [{ Character = 0; IndentLevel = currentIndent; Line = currentLine; Token = Newline }]
             else
                 match runParserOnString pindentation initParserState "" line with
                 | Success (indent, _, _) ->
                     let indentTokens = processIndentation currentIndent indent
-                    tokens <- tokens @ indentTokens
+                    let indentTokenInfos = 
+                        indentTokens |> List.map (fun tok -> 
+                            { Token = tok; Line = currentLine; Character = 0; IndentLevel = currentIndent })
+                    tokens <- tokens @ indentTokenInfos
                     currentIndent <- indent
                     
                     let restOfLine = line.TrimStart()
+                    let charOffset = line.Length - restOfLine.Length
+                    
                     match runParserOnString plineTokens initParserState "" restOfLine with
                     | Success (lineTokens, _, _) ->
-                        tokens <- tokens @ lineTokens @ [Newline]
+                        let mutable charPos = charOffset
+                        let lineTokenInfos = 
+                            lineTokens |> List.map (fun tok ->
+                                let tokenInfo = { Token = tok; Line = currentLine; Character = charPos; IndentLevel = currentIndent }
+                                charPos <- charPos + 1
+                                tokenInfo)
+                        tokens <- tokens @ lineTokenInfos @ [{ Token = Newline; Line = currentLine; Character = line.Length; IndentLevel = currentIndent }]
                     | Failure _ ->
-                        tokens <- tokens @ [Newline]
+                        tokens <- tokens @ [{ Token = Newline; Line = currentLine; Character = charOffset; IndentLevel = currentIndent }]
                 | Failure _ ->
-                    tokens <- tokens @ [Newline]
+                    tokens <- tokens @ [{ Token = Newline; Line = currentLine; Character = 0; IndentLevel = currentIndent }]
+            currentLine <- currentLine + 1
         
         // Dedents am Ende für alle offenen Indentation-Levels
         let finalDedents = List.replicate (currentIndent / 4) Dedent
-        tokens @ finalDedents @ [EOF]
+        let finalDedentInfos = finalDedents |> List.map (fun tok -> 
+            { Token = tok; Line = currentLine; Character = 0; IndentLevel = currentIndent })
+        tokens @ finalDedentInfos @ [{ Token = EOF; Line = currentLine; Character = 0; IndentLevel = 0 }]
 
+    let tokenizeFile filePath =
+        System.IO.File.ReadAllText(filePath) |> tokenizeWithIndentation

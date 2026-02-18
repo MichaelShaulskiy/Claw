@@ -1,0 +1,4 @@
+let main2 (argc: int) (argv: char**): int =
+    let mut myvar = 0
+    myvar <- 1
+    ()
